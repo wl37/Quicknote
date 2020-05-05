@@ -17,7 +17,7 @@ mv quicknote.py quicknote
 sudo cp quicknote ~/.local/bin
 ```
 
-Any text copied to the system clipboard, now you can run in the terminal
+Any text copied to the system clipboard can be saved by running command *quicknote* in the terminal. You can add an informative message (optional).
 ```bash
 quicknote "A new piece of note saved for later reading"
 ```
