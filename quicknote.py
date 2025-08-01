@@ -6,6 +6,7 @@ import pyperclip # Replaced pandas.io.clipboard
 import tkinter as tk
 from tkinter import ttk # For themed widgets
 from tkinter import messagebox, filedialog # For user feedback and directory dialog
+from tkinter import scrolledtext # For markdown editor
 import glob # For listing files
 import sys # For stdin checking
 from markdownify import markdownify as md # HTML to Markdown
@@ -21,6 +22,95 @@ Usage: save clipborad copied text to .md file save on local disk.
 current_save_path = os.path.expanduser("~")
 # home = os.path.expanduser("~") # Replaced by current_save_path for flexibility
 # note_file_location = os.path.join(home, "quicknote.md") # This will be dynamic now
+
+def open_markdown_editor(file_path):
+    """Opens a markdown editor window for the selected file"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            file_content = f.read()
+    except Exception as e:
+        messagebox.showerror("File Open Error", f"Could not open file {file_path}:\n{e}")
+        return
+    
+    # Create editor window
+    editor_window = tk.Toplevel()
+    editor_window.title(f"Markdown Editor - {os.path.basename(file_path)}")
+    editor_window.geometry("800x600")
+    
+    # Create menu bar
+    menubar = tk.Menu(editor_window)
+    editor_window.config(menu=menubar)
+    
+    # File menu
+    file_menu = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="File", menu=file_menu)
+    
+    # Create text editor with scrollbars
+    editor_frame = ttk.Frame(editor_window)
+    editor_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+    
+    text_editor = scrolledtext.ScrolledText(
+        editor_frame, 
+        wrap=tk.WORD,
+        width=80,
+        height=30,
+        font=('Consolas', 11),
+        undo=True
+    )
+    text_editor.pack(fill=tk.BOTH, expand=True)
+    
+    # Insert file content
+    text_editor.insert('1.0', file_content)
+    text_editor.mark_set('insert', '1.0')  # Set cursor to beginning
+    
+    # Track if file has been modified
+    def on_text_change(event=None):
+        editor_window.title(f"Markdown Editor - {os.path.basename(file_path)} *")
+    
+    text_editor.bind('<KeyPress>', on_text_change)
+    text_editor.bind('<Button-1>', lambda e: editor_window.after_idle(lambda: editor_window.title(f"Markdown Editor - {os.path.basename(file_path)}")))
+    
+    # Save function
+    def save_file():
+        try:
+            content = text_editor.get('1.0', tk.END + '-1c')  # Get all content except last newline
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            editor_window.title(f"Markdown Editor - {os.path.basename(file_path)}")
+            messagebox.showinfo("File Saved", f"File saved successfully to:\n{file_path}", parent=editor_window)
+        except Exception as e:
+            messagebox.showerror("Save Error", f"Could not save file:\n{e}", parent=editor_window)
+    
+    # Save as function
+    def save_as_file():
+        new_file_path = filedialog.asksaveasfilename(
+            defaultextension=".md",
+            filetypes=[("Markdown files", "*.md"), ("All files", "*.*")],
+            parent=editor_window
+        )
+        if new_file_path:
+            try:
+                content = text_editor.get('1.0', tk.END + '-1c')
+                with open(new_file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                messagebox.showinfo("File Saved", f"File saved successfully to:\n{new_file_path}", parent=editor_window)
+            except Exception as e:
+                messagebox.showerror("Save Error", f"Could not save file:\n{e}", parent=editor_window)
+    
+    # Add menu items
+    file_menu.add_command(label="Save", command=save_file, accelerator="Ctrl+S")
+    file_menu.add_command(label="Save As...", command=save_as_file, accelerator="Ctrl+Shift+S")
+    file_menu.add_separator()
+    file_menu.add_command(label="Close", command=editor_window.destroy, accelerator="Ctrl+W")
+    
+    # Keyboard shortcuts
+    editor_window.bind('<Control-s>', lambda e: save_file())
+    editor_window.bind('<Control-S>', lambda e: save_as_file())
+    editor_window.bind('<Control-w>', lambda e: editor_window.destroy())
+    
+    # Focus on text editor
+    text_editor.focus_set()
+
 
 def save_note_to_file(save_dir, text_content, comments, curr_time_obj, is_markdown=False):
     """ Saves the note to a file named YYYY-MM-quicknotes.md in the specified directory.
@@ -159,6 +249,45 @@ def main():
 
     file_listbox = tk.Listbox(right_middle_frame, height=10)
     file_listbox.pack(fill=tk.BOTH, expand=True, pady=(0,10))
+
+    def open_selected_file(event=None):
+        """Opens the currently selected file in the markdown editor"""
+        selection = file_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("No File Selected", "Please select a file to open.", parent=root)
+            return
+        
+        selected_filename = file_listbox.get(selection[0])
+        
+        # Check if it's an error message or no files message
+        if selected_filename.startswith("No .md files found") or selected_filename.startswith("Directory not found") or selected_filename.startswith("Error listing files"):
+            messagebox.showinfo("Cannot Open", "Selected item is not a valid file.", parent=root)
+            return
+        
+        # Build full file path
+        full_file_path = os.path.join(current_save_path, selected_filename)
+        
+        if os.path.isfile(full_file_path):
+            open_markdown_editor(full_file_path)
+        else:
+            messagebox.showerror("File Not Found", f"File does not exist:\n{full_file_path}", parent=root)
+
+    # Bind double-click and Enter key to open file
+    file_listbox.bind('<Double-Button-1>', open_selected_file)
+    file_listbox.bind('<Return>', open_selected_file)
+    
+    # Enable keyboard navigation - focus on listbox when Tab is pressed
+    def focus_file_listbox(event):
+        file_listbox.focus_set()
+        if file_listbox.size() > 0:  # If there are items in the listbox
+            file_listbox.selection_clear(0, tk.END)
+            file_listbox.selection_set(0)  # Select first item
+            file_listbox.activate(0)
+        return "break"  # Prevent default Tab behavior
+    
+    # Bind Tab key from other widgets to focus on file listbox
+    root.bind('<Tab>', focus_file_listbox)
+
 
     def populate_file_browser():
         global current_save_path

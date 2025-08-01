@@ -14,6 +14,7 @@ The application features a user-friendly GUI for browsing notes, managing settin
 *   **Configurable Save Directory:** Users can choose the directory where their monthly note files are stored via the in-app settings. Defaults to the user's home directory.
 *   **Clipboard Preview & Refresh:** View the current clipboard content (plain text preview) directly in the app and refresh it on demand.
 *   **File Browser:** Browse existing Markdown note files in the configured save directory.
+*   **File Editor Integration:** Open and edit any note file directly from the file browser with a built-in Markdown editor.
 *   **Flexible Saving Options:**
     *   **Save Note:** Save clipboard content with a custom comment via the GUI.
     *   **Save Clipboard Now:** Instantly save the current clipboard content with a timestamped default comment.
@@ -74,6 +75,8 @@ When you run `python quicknote.py` without any piped input, the main GUI window 
     *   **Save Note Button:** Saves the current clipboard content (processing HTML to Markdown if applicable) along with your custom comment into the relevant monthly note file.
     *   **Save Clipboard Now Button:** Immediately saves the current clipboard content with a default timestamped comment (e.g., "Quick import - \[timestamp]"). Useful for very fast captures.
     *   **File Browser (Right Panel):** Displays a list of `.md` files found in the currently configured save directory.
+        *   **Opening Files:** Double-click any file in the list to open it in the built-in Markdown editor.
+        *   **Keyboard Navigation:** Use the Tab key to focus on the file browser, then use arrow keys to navigate and Enter to open the selected file.
     *   **Refresh Files Button:** Manually refreshes the list of files in the file browser.
     *   **Settings Button:** Opens the settings window.
 
@@ -82,6 +85,17 @@ When you run `python quicknote.py` without any piped input, the main GUI window 
     *   **Save Directory:** Allows you to view and change the directory where your monthly note files (`YYYY-MM-quicknotes.md`) are stored.
         *   Use the "Browse..." button to select a new directory.
         *   Click "Apply Settings" to save your changes. The file browser will update to reflect the new directory.
+
+*   **Built-in Markdown Editor:**
+    *   Accessed by double-clicking any file in the file browser or pressing Enter on a selected file.
+    *   **Features:**
+        *   Full-featured text editor with syntax highlighting optimized for Markdown.
+        *   Undo/Redo functionality (Ctrl+Z/Ctrl+Y).
+        *   Word wrapping for comfortable editing.
+        *   **File Menu:** Save (Ctrl+S), Save As (Ctrl+Shift+S), and Close (Ctrl+W) options.
+        *   **Auto-save indicator:** Window title shows "*" when file has unsaved changes.
+        *   **Keyboard shortcuts:** Standard text editing shortcuts work as expected.
+    *   Changes are saved directly to the original file, preserving your note organization.
 
 *   **How Notes Are Saved:**
     *   Notes are appended to a file named according to the current year and month (e.g., `2023-10-quicknotes.md`) within the configured save directory.
