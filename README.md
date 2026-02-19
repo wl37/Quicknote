@@ -179,5 +179,5 @@ Ensure `quicknote.py` is executable (`chmod +x quicknote.py`) if you're calling 
 
 ## License
 
-This project is licensed under the MIT License. (The original `quicknote.py` was simple, this version builds upon it. Assuming MIT is appropriate.)
+This project is licensed under the MIT License. 
 ```
